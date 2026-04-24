@@ -233,6 +233,21 @@ const [checkCode, setCheckCode] = useState('')
               <div className="flex justify-between text-xs font-bold text-gray-500"><span>平均正解率</span><span>{Math.round(results.reduce((s,r)=>s+(r.score/r.total*100),0)/results.length)}%</span></div>
             </div>
             
+          {results.map((r,i)=>(
+              <div key={i} className="bg-gray-50 rounded-xl p-3 mb-2">
+                <div className="flex items-center justify-between mb-2">
+                  <div><p className="font-bold text-slate-800 text-sm">{r.student_name}</p><p className="text-gray-400 text-xs mt-0.5">{r.score}/{r.total}問正解</p></div>
+                  <div className={`text-lg font-black ${r.score===r.total?'text-green-500':r.score/r.total>=.6?'text-blue-500':'text-orange-500'}`}>{Math.round(r.score/r.total*100)}%</div>
+                </div>
+                {(r as {results?:{id:number;correct:boolean;correct_answer:string}[]}).results && <div className="flex gap-1 flex-wrap">
+                  {(r as {results:{id:number;correct:boolean;correct_answer:string}[]}).results.map(res=>(
+                    <div key={res.id} title={res.correct?'正解':`正解: ${res.correct_answer}`} className={`text-xs font-bold px-2 py-1 rounded-lg ${res.correct?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}`}>
+                      Q{res.id} {res.correct?'✅':'❌'}
+                    </div>
+                  ))}
+                </div>}
+              </div>
+            ))}
           </>
         }
         <div className="h-2"/>
