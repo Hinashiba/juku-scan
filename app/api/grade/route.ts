@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2048,
       system: '採点AI。JSONのみ出力。',
       messages: [{ role: 'user', content: `採点してJSONのみ出力:\n問題: ${JSON.stringify(questions.map(q => ({id:q.id,q:q.question,a:q.answer,type:q.type})))}\n回答: ${JSON.stringify(answers)}\n{"score":N,"total":N,"results":[{"id":1,"correct":true,"feedback":"フィードバック","correct_answer":"正解"}]}\n記述・穴埋めは意味が合えば正解。` }]

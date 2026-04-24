@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 4096,
       system: '高精度OCRシステム。画像内のテキストを一字一句忠実に書き起こす。補完・推測・要約は絶対しない。',
       messages: [{ role: 'user', content: [
