@@ -148,30 +148,16 @@ const [checkCode, setCheckCode] = useState('')
         <div className="h-2"/>
         <Btn onClick={()=>{setQuiz({title:'サンプルテスト',questions:[{id:1,type:'multiple_choice',question:'She ___ to school every day.',options:['go','goes','going','gone'],answer:'goes',explanation:'三人称単数現在形'},{id:2,type:'fill_in',question:'I have ___ lunch yet.',answer:'not eaten',explanation:'現在完了否定形'}]});setStep('preview')}} color="ghost">📝 サンプルで試す</Btn>
         <div className="h-2"/>
-        <Btn onClick={onBack} color="ghost"><div className="h-4"/>
-<div className="border-t border-gray-100 pt-4">
-  <p className="text-xs font-bold text-gray-400 mb-2">📊 提出状況を確認する</p>
-  <div className="flex gap-2">
-    <input
-      value={checkCode}
-      onChange={e=>setCheckCode(e.target.value.toUpperCase())}
-      placeholder="配布コードを入力"
-      maxLength={6}
-      className="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm font-bold tracking-widest outline-none focus:border-blue-500 uppercase"
-    />
-    <button
-      onClick={async()=>{
-        if(!checkCode.trim()) return
-        setCode(checkCode)
-        const r = await fetch(`/api/submit?code=${checkCode}`)
-        const data = await r.json()
-        setResults(Array.isArray(data)?data:[])
-        setStep('results')
-      }}
-      className="bg-blue-800 text-white text-sm font-bold px-4 py-2 rounded-xl hover:bg-blue-700 transition-all"
-    >確認</button>
-  </div>
-</div>← 戻る</Btn>
+        <div className="h-4"/>
+        <div className="border-t border-gray-100 pt-4">
+          <p className="text-xs font-bold text-gray-400 mb-2">📊 提出状況を確認する</p>
+          <div className="flex gap-2">
+            <input value={checkCode} onChange={e=>setCheckCode(e.target.value.toUpperCase())} placeholder="配布コードを入力" maxLength={6} className="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-sm font-bold tracking-widest outline-none focus:border-blue-500 uppercase"/>
+            <button onClick={async()=>{if(!checkCode.trim())return;setCode(checkCode);const r=await fetch(`/api/submit?code=${checkCode}`);const data=await r.json();setResults(Array.isArray(data)?data:[]);setStep('results')}} className="bg-blue-800 text-white text-sm font-bold px-4 py-2 rounded-xl hover:bg-blue-700 transition-all">確認</button>
+          </div>
+        </div>
+        <div className="h-2"/>
+        <Btn onClick={onBack} color="ghost">← 戻る</Btn>
       </C>}
 
       {step==='ocr-load' && <C p="p-8">
