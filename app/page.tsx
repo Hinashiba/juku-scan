@@ -316,13 +316,20 @@ const [checkCode, setCheckCode] = useState('')
                   <div><p className="font-bold text-slate-800 text-sm">{r.student_name}</p><p className="text-gray-400 text-xs mt-0.5">{r.score}/{r.total}問正解</p></div>
                   <div className={`text-lg font-black ${r.score===r.total?'text-green-500':r.score/r.total>=.6?'text-blue-500':'text-orange-500'}`}>{Math.round(r.score/r.total*100)}%</div>
                 </div>
-                {(r as {results?:{id:number;correct:boolean;correct_answer:string}[]}).results && <div className="flex gap-1 flex-wrap">
-                  {(r as {results:{id:number;correct:boolean;correct_answer:string}[]}).results.map(res=>(
-                    <div key={res.id} title={res.correct?'正解':`正解: ${res.correct_answer}`} className={`text-xs font-bold px-2 py-1 rounded-lg ${res.correct?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}`}>
-                      Q{res.id} {res.correct?'✅':'❌'}
-                    </div>
-                  ))}
-                </div>}
+                {(r as {results?:{id:number;correct:boolean;correct_answer:string;student_answer?:string}[]}).results && (
+                  <div className="mt-1">
+                    {(r as {results:{id:number;correct:boolean;correct_answer:string;student_answer?:string}[]}).results.map(res=>(
+                      <div key={res.id} className={`text-xs p-2 rounded-lg mb-1 ${res.correct?'bg-green-50 border border-green-200':'bg-red-50 border border-red-200'}`}>
+                        <div className="flex items-center gap-1 font-bold mb-0.5">
+                          <span>{res.correct?'✅':'❌'}</span>
+                          <span className={res.correct?'text-green-700':'text-red-700'}>Q{res.id}</span>
+                        </div>
+                        {!res.correct && <p className="text-red-600">回答: <strong>{res.student_answer||'（未回答）'}</strong></p>}
+                        {!res.correct && <p className="text-gray-500">正解: <strong>{res.correct_answer}</strong></p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </>
