@@ -454,7 +454,190 @@ function StudentMode({ onBack }: { onBack: () => void }) {
     </div>
   )
 }
+// ── Handwritten Submit Mode ───────────────────────
+function HandwrittenMode({ onBack }: { onBack: () => void }) {
+  const [step, setStep] = useState('form')
+  const [name, setName] = useState('')
+  const [cls, setCls] = useState('A')
+  const [title, setTitle] = useState('')
+  const [imgB64, setImgB64] = useState('')
+  const [imgPrev, setImgPrev] = useState('')
+  const [result, setResult] = useState<{ocrText:string;gradeResult:{score:number;total:number;results:{question_num:string;student_answer:string;correct:boolean;feedback:string}[]}}|null>(null)
+  const [err, setErr] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
 
+  const loadFile = (file: File|null) => {
+    if (!file?.type.startsWith('image/')) return
+    const r = new FileReader()
+    r.onload = e => { const res = e.target?.result as string; setImgB64(res.split(',')[1]); setImgPrev(res) }
+    r.readAsDataURL(file)
+  }
+
+  const submit = async () => {
+    if (!name.trim()||!title.trim()||!imgB64) { setErr('名前・宿題タイトル・写真をすべて入力してください'); return }
+    setStep('loading'); setErr('')
+    try {
+      const res = await fetch('/api/handwritten', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ studentName:name, className:cls, imageBase64:imgB64, homeworkTitle:title }) })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setResult(data); setStep('result')
+    } catch(e: unknown) { setErr(e instanceof Error ? e.message : String(e)); setStep('form') }
+  }
+
+  return (
+    <div>
+      {step==='form' && <C>
+        <div className="text-center mb-4">
+          <div className="text-4xl mb-1">✏️</div>
+          <h2 className="font-black text-slate-800 text-lg">手書き宿題を提出</h2>
+          <p className="text-xs text-gray-400 mt-1">写真を撮って送るだけで自動採点</p>
+        </div>
+        <div className="mb-3">
+          <label className="text-xs font-bold text-gray-500 block mb-1.5">名前</label>
+          <input value={name} onChange={e=>setName(e.target.value)} placeholder="例：山田 太郎" className="w-full border-2 border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500"/>
+        </div>
+        <div className="mb-3">
+          <label className="text-xs font-bold text-gray-500 block mb-1.5">クラス</label>
+          <div className="flex gap-2">
+            {['A','B','C'].map(c=>(
+              <button key={c} onClick={()=>setCls(c)} className={`flex-1 py-2.5 font-black text-base rounded-xl border-2 transition-all ${cls===c?'bg-blue-800 text-white border-blue-800':'bg-white text-gray-500 border-gray-200'}`}>{c}</button>
+            ))}
+          </div>
+        </div>
+        <div className="mb-3">
+          <label className="text-xs font-bold text-gray-500 block mb-1.5">宿題タイトル</label>
+          <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="例：Unit 3 単語テスト" className="w-full border-2 border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500"/>
+        </div>
+        <div className="mb-3">
+          <label className="text-xs font-bold text-gray-500 block mb-1.5">答案の写真</label>
+          <div className="border-2 border-dashed border-gray-200 rounded-2xl p-5 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
+            onClick={()=>fileRef.current?.click()}
+            onDragOver={e=>e.preventDefault()}
+            onDrop={e=>{e.preventDefault();loadFile(e.dataTransfer.files[0])}}>
+            {imgPrev ? <img src={imgPrev} alt="" className="max-h-48 mx-auto rounded-xl object-contain"/> : <><div className="text-3xl mb-2">📷</div><p className="font-bold text-sm text-gray-600">写真をタップ or ドロップ</p><p className="text-xs text-gray-400 mt-1">明るい場所・ペンで書いた答案推奨</p></>}
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e=>loadFile(e.target.files?.[0]??null)}/>
+        </div>
+        {err && <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl"><p className="text-red-600 text-xs font-bold">❌ {err}</p></div>}
+        <Btn onClick={submit} disabled={!name.trim()||!title.trim()||!imgB64} color="orange">📤 提出して採点する</Btn>
+        <div className="h-2"/>
+        <Btn onClick={onBack} color="ghost">← 戻る</Btn>
+      </C>}
+
+      {step==='loading' && <C p="p-8">
+        <div className="text-center">
+          <span style={{display:'inline-block',animation:'spin 1s linear infinite'}}>✏️</span>
+          <h3 className="font-black text-slate-800 mt-3 mb-1">手書き文字を解析中...</h3>
+          <p className="text-gray-500 text-sm">OCR → 採点の順で処理しています</p>
+        </div>
+      </C>}
+
+      {step==='result' && result && <C>
+        <div className="text-center mb-4">
+          <div className="text-5xl mb-2">{result.gradeResult.score===result.gradeResult.total?'🎉':result.gradeResult.score/result.gradeResult.total>=.6?'👍':'📖'}</div>
+          <div className="text-5xl font-black text-slate-800 leading-none">{result.gradeResult.score}<span className="text-2xl text-gray-400 font-normal">/{result.gradeResult.total}</span></div>
+          <p className="text-gray-500 text-sm mt-2">正解率 {Math.round(result.gradeResult.score/result.gradeResult.total*100)}%</p>
+          <p className="text-green-600 text-xs mt-1 font-bold">✅ 先生に自動送信されました</p>
+        </div>
+        <div className="bg-gray-50 rounded-xl p-3 mb-3">
+          <p className="text-xs font-bold text-gray-400 mb-2">📄 AIの文字起こし結果</p>
+          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{result.ocrText}</p>
+        </div>
+        {result.gradeResult.results?.map((r,i)=>(
+          <div key={i} className={`rounded-2xl p-3 mb-2 border-2 ${r.correct?'bg-green-50 border-green-200':'bg-red-50 border-red-200'}`}>
+            <div className="flex items-center gap-2 mb-1">
+              <span>{r.correct?'✅':'❌'}</span>
+              <span className={`font-bold text-sm ${r.correct?'text-green-700':'text-red-700'}`}>問題{r.question_num}</span>
+            </div>
+            <p className="text-gray-700 text-xs">回答: <strong>{r.student_answer}</strong></p>
+            <p className="text-gray-500 text-xs mt-0.5">💡 {r.feedback}</p>
+          </div>
+        ))}
+        <div className="h-2"/>
+        <Btn onClick={onBack} color="blue">🏠 ホームに戻る</Btn>
+      </C>}
+    </div>
+  )
+}
+
+// ── Handwritten Teacher View ──────────────────────
+function HandwrittenTeacherView({ onBack }: { onBack: () => void }) {
+  const [cls, setCls] = useState('ALL')
+  const [submissions, setSubmissions] = useState<Array<{id:string;student_name:string;class:string;image_base64:string;ocr_text:string;grade_result:{score:number;total:number;results:{question_num:string;student_answer:string;correct:boolean;feedback:string}[]};submitted_at:string}>>([])
+  const [expanded, setExpanded] = useState<string|null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const fetchData = async (c: string) => {
+    setLoading(true)
+    const url = c==='ALL' ? '/api/handwritten' : `/api/handwritten?class=${c}`
+    const res = await fetch(url)
+    const data = await res.json()
+    setSubmissions(Array.isArray(data)?data:[])
+    setLoading(false)
+  }
+
+  useState(()=>{ fetchData('ALL') })
+
+  return (
+    <div>
+      <C>
+        <h2 className="font-black text-slate-800 text-base mb-3">✏️ 手書き提出一覧</h2>
+        <div className="flex gap-2 mb-3">
+          {['ALL','A','B','C'].map(c=>(
+            <button key={c} onClick={()=>{setCls(c);fetchData(c)}} className={`flex-1 py-2 text-sm font-bold rounded-xl border-2 transition-all ${cls===c?'bg-blue-800 text-white border-blue-800':'bg-white text-gray-500 border-gray-200'}`}>{c==='ALL'?'全員':c+'組'}</button>
+          ))}
+        </div>
+        <button onClick={()=>fetchData(cls)} className="text-xs font-bold text-blue-600 hover:text-blue-800">🔄 更新</button>
+      </C>
+
+      {loading && <C p="p-6"><div className="text-center"><span style={{display:'inline-block',animation:'spin 1s linear infinite'}}>⏳</span></div></C>}
+
+      {!loading && submissions.length===0 && <C><div className="text-center py-6"><div className="text-4xl mb-2">⏳</div><p className="text-gray-500 text-sm font-bold">まだ提出がありません</p></div></C>}
+
+      {submissions.map(s=>(
+        <div key={s.id} className="bg-white rounded-2xl shadow-xl mb-3 overflow-hidden">
+          <div className="p-4 cursor-pointer" onClick={()=>setExpanded(expanded===s.id?null:s.id)}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-slate-800 text-sm">{s.student_name} <span className="text-xs text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded-full ml-1">{s.class}組</span></p>
+                <p className="text-gray-400 text-xs mt-0.5">{new Date(s.submitted_at).toLocaleString('ja-JP')}</p>
+              </div>
+              <div className="text-right">
+                <div className={`text-lg font-black ${s.grade_result.score===s.grade_result.total?'text-green-500':s.grade_result.score/s.grade_result.total>=.6?'text-blue-500':'text-orange-500'}`}>
+                  {Math.round(s.grade_result.score/s.grade_result.total*100)}%
+                </div>
+                <p className="text-gray-400 text-xs">{s.grade_result.score}/{s.grade_result.total}問</p>
+              </div>
+            </div>
+            <p className="text-gray-400 text-xs mt-1">{expanded===s.id?'▲ 閉じる':'▼ 詳細を見る'}</p>
+          </div>
+          {expanded===s.id && (
+            <div className="border-t border-gray-100 p-4">
+              <p className="text-xs font-bold text-gray-400 mb-2">📷 提出写真</p>
+              <img src={`data:image/jpeg;base64,${s.image_base64}`} alt="" className="w-full rounded-xl mb-3 object-contain max-h-64"/>
+              <p className="text-xs font-bold text-gray-400 mb-2">📄 AIの文字起こし</p>
+              <div className="bg-gray-50 rounded-xl p-3 mb-3">
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{s.ocr_text}</p>
+              </div>
+              <p className="text-xs font-bold text-gray-400 mb-2">✅ 採点結果</p>
+              {s.grade_result.results?.map((r,i)=>(
+                <div key={i} className={`rounded-xl p-2.5 mb-1.5 border ${r.correct?'bg-green-50 border-green-200':'bg-red-50 border-red-200'}`}>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-sm">{r.correct?'✅':'❌'}</span>
+                    <span className={`font-bold text-xs ${r.correct?'text-green-700':'text-red-700'}`}>問題{r.question_num}</span>
+                  </div>
+                  <p className="text-gray-700 text-xs">回答: <strong>{r.student_answer}</strong></p>
+                  <p className="text-gray-500 text-xs mt-0.5">💡 {r.feedback}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+      <C><Btn onClick={onBack} color="ghost">← 戻る</Btn></C>
+    </div>
+  )
+}
 // ── Main App ─────────────────────────────────────
 export default function Home() {
   const [mode, setMode] = useState('home')
@@ -491,7 +674,7 @@ export default function Home() {
                 </div>
               </div>
             </button>
-            <button onClick={()=>setMode('student')} className="w-full text-left">
+            <button onClick={()=>setMode('student')} className="w-full text-left mb-3">
               <div className="bg-white rounded-2xl p-5 shadow-2xl hover:shadow-3xl transition-all hover:-translate-y-0.5">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-orange-500 flex items-center justify-center text-2xl shrink-0">🎓</div>
@@ -504,6 +687,44 @@ export default function Home() {
                       ))}
                     </div>
                   </div>
+              </div>
+              </div>
+            </button>
+            <button onClick={()=>setMode('handwritten')} className="w-full text-left mb-3">
+              <div className="bg-white rounded-2xl p-5 shadow-2xl hover:shadow-3xl transition-all hover:-translate-y-0.5">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-600 flex items-center justify-center text-2xl shrink-0">✏️</div>
+                  <div>
+                    <p className="font-black text-slate-800 text-base">手書き提出</p>
+                    <p className="text-gray-500 text-xs mt-0.5">写真を撮って送るだけで自動採点</p>
+                    <div className="flex gap-1 mt-2 flex-wrap">
+                      {['📷 写真提出','🔤 自動文字起こし','⚡ 即時採点'].map(t=>(
+                        <span key={t} className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </button>
+            <button onClick={()=>setMode('handwritten-teacher')} className="w-full text-left">
+              <div className="bg-white rounded-2xl p-5 shadow-2xl hover:shadow-3xl transition-all hover:-translate-y-0.5">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-purple-600 flex items-center justify-center text-2xl shrink-0">📋</div>
+                  <div>
+                    <p className="font-black text-slate-800 text-base">手書き提出確認</p>
+                    <p className="text-gray-500 text-xs mt-0.5">写真・文字起こし・採点結果を確認</p>
+                    <div className="flex gap-1 mt-2 flex-wrap">
+                      {['📷 元写真確認','📄 文字起こし','📊 クラス別'].map(t=>(
+                        <span key={t} className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-bold">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </button>
+          </div>
+        )}
+                  </div>
                 </div>
               </div>
             </button>
@@ -511,6 +732,8 @@ export default function Home() {
         )}
         {mode==='teacher' && <TeacherMode onBack={()=>setMode('home')}/>}
         {mode==='student' && <StudentMode onBack={()=>setMode('home')}/>}
+        {mode==='handwritten' && <HandwrittenMode onBack={()=>setMode('home')}/>}
+        {mode==='handwritten-teacher' && <HandwrittenTeacherView onBack={()=>setMode('home')}/>}
       </div>
     </div>
   )
