@@ -724,12 +724,6 @@ export default function Home() {
             </button>
           </div>
         )}
-                  </div>
-                </div>
-              </div>
-            </button>
-          </div>
-        )}
         {mode==='teacher' && <TeacherMode onBack={()=>setMode('home')}/>}
         {mode==='student' && <StudentMode onBack={()=>setMode('home')}/>}
         {mode==='handwritten' && <HandwrittenMode onBack={()=>setMode('home')}/>}
