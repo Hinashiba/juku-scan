@@ -130,6 +130,19 @@ const TagBadge = ({type}: {type: string}) =>
 // ── Teacher Mode ─────────────────────────────────
 function TeacherMode({ onBack }: { onBack: () => void }) {
   const [step, setStep] = useState('upload')
+  const [auth, setAuth] = useState(false)
+  const [pw, setPw] = useState('')
+  const [pwErr, setPwErr] = useState(false)
+  if (!auth) return (
+    <div className="bg-white rounded-2xl p-6 shadow-2xl">
+      <div className="text-center mb-4"><div className="text-4xl mb-2">🔒</div><h2 className="font-black text-slate-800 text-lg">先生モード</h2><p className="text-gray-400 text-sm mt-1">パスワードを入力してください</p></div>
+      <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){if(pw==='naisyo'){setAuth(true);setPwErr(false)}else setPwErr(true)}}} placeholder="パスワード" className="w-full border-2 border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500 mb-2"/>
+      {pwErr && <p className="text-red-500 text-xs mb-2">パスワードが違います</p>}
+      <button onClick={()=>{if(pw==='naisyo'){setAuth(true);setPwErr(false)}else setPwErr(true)}} className="w-full bg-blue-800 text-white font-bold py-3 rounded-xl text-sm hover:bg-blue-700">入室する</button>
+      <div className="h-2"/>
+      <button onClick={onBack} className="w-full bg-transparent border-2 border-gray-200 text-gray-500 font-bold py-3 rounded-xl text-sm hover:bg-gray-50">← 戻る</button>
+    </div>
+  )
   const [b64, setB64] = useState('')
   const [mime, setMime] = useState('image/jpeg')
   const [prev, setPrev] = useState('')
@@ -562,6 +575,19 @@ function HandwrittenMode({ onBack }: { onBack: () => void }) {
 
 // ── Handwritten Teacher View ──────────────────────
 function HandwrittenTeacherView({ onBack }: { onBack: () => void }) {
+  const [auth, setAuth] = useState(false)
+  const [pw, setPw] = useState('')
+  const [pwErr, setPwErr] = useState(false)
+  if (!auth) return (
+    <div className="bg-white rounded-2xl p-6 shadow-2xl">
+      <div className="text-center mb-4"><div className="text-4xl mb-2">🔒</div><h2 className="font-black text-slate-800 text-lg">手書き提出確認</h2><p className="text-gray-400 text-sm mt-1">パスワードを入力してください</p></div>
+      <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){if(pw==='naisyo'){setAuth(true);setPwErr(false)}else setPwErr(true)}}} placeholder="パスワード" className="w-full border-2 border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500 mb-2"/>
+      {pwErr && <p className="text-red-500 text-xs mb-2">パスワードが違います</p>}
+      <button onClick={()=>{if(pw==='naisyo'){setAuth(true);setPwErr(false)}else setPwErr(true)}} className="w-full bg-blue-800 text-white font-bold py-3 rounded-xl text-sm hover:bg-blue-700">入室する</button>
+      <div className="h-2"/>
+      <button onClick={onBack} className="w-full bg-transparent border-2 border-gray-200 text-gray-500 font-bold py-3 rounded-xl text-sm hover:bg-gray-50">← 戻る</button>
+    </div>
+  )
   const [cls, setCls] = useState('ALL')
   const [submissions, setSubmissions] = useState<Array<{id:string;student_name:string;class:string;image_base64:string;ocr_text:string;grade_result:{score:number;total:number;results:{question_num:string;student_answer:string;correct:boolean;feedback:string}[]};submitted_at:string}>>([])
   const [expanded, setExpanded] = useState<string|null>(null)
