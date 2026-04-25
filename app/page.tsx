@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 async function preprocessImg(b64: string, mime: string, gray: boolean, contrast: boolean): Promise<string> {
   return new Promise(resolve => {
@@ -582,6 +582,17 @@ function HandwrittenTeacherView({ onBack }: { onBack: () => void }) {
   const [submissions, setSubmissions] = useState<Array<{id:string;student_name:string;class:string;image_base64:string;ocr_text:string;grade_result:{score:number;total:number;results:{question_num:string;student_answer:string;correct:boolean;feedback:string}[]};submitted_at:string}>>([])
   const [expanded, setExpanded] = useState<string|null>(null)
   const [loading, setLoading] = useState(false)
+  const fetchData = async (c: string) => {
+    setLoading(true)
+    const url = c==='ALL' ? '/api/handwritten' : `/api/handwritten?class=${c}`
+    const res = await fetch(url)
+    const data = await res.json()
+    setSubmissions(Array.isArray(data)?data:[])
+    setLoading(false)
+  }
+
+  useEffect(()=>{ if(auth) fetchData('ALL') }, [auth])
+
   if (!auth) return (
     <div className="bg-white rounded-2xl p-6 shadow-2xl">
       <div className="text-center mb-4"><div className="text-4xl mb-2">🔒</div><h2 className="font-black text-slate-800 text-lg">手書き提出確認</h2><p className="text-gray-400 text-sm mt-1">パスワードを入力してください</p></div>
@@ -592,16 +603,6 @@ function HandwrittenTeacherView({ onBack }: { onBack: () => void }) {
       <button onClick={onBack} className="w-full bg-transparent border-2 border-gray-200 text-gray-500 font-bold py-3 rounded-xl text-sm hover:bg-gray-50">← 戻る</button>
     </div>
   )
-  const fetchData = async (c: string) => {
-    setLoading(true)
-    const url = c==='ALL' ? '/api/handwritten' : `/api/handwritten?class=${c}`
-    const res = await fetch(url)
-    const data = await res.json()
-    setSubmissions(Array.isArray(data)?data:[])
-    setLoading(false)
-  }
-
-  useState(()=>{ fetchData('ALL') })
 
   return (
     <div>
