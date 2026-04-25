@@ -46,7 +46,84 @@ const Btn = ({children, onClick, color='blue', disabled=false}: {children: React
   const tx = color==='ghost' ? 'text-gray-500' : 'text-white'
   return <button onClick={onClick} disabled={disabled} className={`w-full py-3 text-sm font-bold rounded-xl transition-all ${bg[color]} ${tx} ${disabled?'opacity-40 cursor-not-allowed':''}`}>{children}</button>
 }
+// ── Custom Keyboard ───────────────────────────────
+function CustomKeyboard({ qid, value, onChange }: { qid: number; value: string; onChange: (v: string) => void }) {
+  const [showKb, setShowKb] = useState(false)
+  const rows = [
+    ['q','w','e','r','t','y','u','i','o','p'],
+    ['a','s','d','f','g','h','j','k','l'],
+    ['z','x','c','v','b','n','m'],
+  ]
+  const tap = (k: string) => onChange(value + k)
+  const del = () => onChange(value.slice(0, -1))
+  const space = () => onChange(value + ' ')
+  const special = ["'", ",", ".", "!", "?", "-"]
 
+  return (
+    <div>
+      <div
+        className="w-full min-h-12 border-2 border-gray-200 rounded-xl p-2.5 text-sm bg-white cursor-pointer flex items-center justify-between"
+        onClick={() => setShowKb(!showKb)}
+      >
+        <span className={value ? 'text-slate-800' : 'text-gray-400'}>{value || '答えを入力（タップでキーボード表示）'}</span>
+        <span className="text-gray-400 text-xs">{showKb ? '▲' : '▼'}</span>
+      </div>
+      {showKb && (
+        <div className="mt-2 bg-gray-100 rounded-xl p-2 select-none">
+          {/* 入力中テキスト */}
+          <div className="bg-white rounded-lg px-3 py-2 text-sm text-slate-800 mb-2 min-h-8 break-all">
+            {value || <span className="text-gray-400">入力中...</span>}
+          </div>
+          {/* アルファベット行 */}
+          {rows.map((row, ri) => (
+            <div key={ri} className="flex justify-center gap-1 mb-1">
+              {row.map(k => (
+                <button key={k} onClick={() => tap(k)}
+                  className="bg-white rounded-lg text-sm font-bold text-slate-800 shadow-sm active:bg-gray-200 transition-all flex items-center justify-center"
+                  style={{width:'9%', minWidth:'28px', height:'36px'}}>
+                  {k}
+                </button>
+              ))}
+            </div>
+          ))}
+          {/* 特殊文字行 */}
+          <div className="flex justify-center gap-1 mb-1">
+            {special.map(k => (
+              <button key={k} onClick={() => tap(k)}
+                className="bg-white rounded-lg text-sm font-bold text-slate-800 shadow-sm active:bg-gray-200 transition-all flex items-center justify-center"
+                style={{width:'9%', minWidth:'28px', height:'36px'}}>
+                {k}
+              </button>
+            ))}
+          </div>
+          {/* 最下行 */}
+          <div className="flex gap-1">
+            <button onClick={() => onChange(value.toUpperCase())}
+              className="bg-yellow-100 text-yellow-800 rounded-lg text-xs font-bold px-2 h-9 flex-1 active:bg-yellow-200">
+              大文字
+            </button>
+            <button onClick={() => onChange(value.toLowerCase())}
+              className="bg-blue-100 text-blue-800 rounded-lg text-xs font-bold px-2 h-9 flex-1 active:bg-blue-200">
+              小文字
+            </button>
+            <button onClick={space}
+              className="bg-white rounded-lg text-xs font-bold h-9 shadow-sm active:bg-gray-200 flex-[3]">
+              スペース
+            </button>
+            <button onClick={del}
+              className="bg-red-100 text-red-700 rounded-lg text-xs font-bold px-3 h-9 flex-1 active:bg-red-200">
+              ⌫
+            </button>
+            <button onClick={() => setShowKb(false)}
+              className="bg-blue-800 text-white rounded-lg text-xs font-bold px-2 h-9 flex-1 active:bg-blue-700">
+              完了
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 const TagBadge = ({type}: {type: string}) =>
   <span className={`text-xs font-bold px-2 py-0.5 rounded ${TAG[type]?.cls}`}>{TAG[type]?.label}</span>
 
@@ -334,7 +411,7 @@ function StudentMode({ onBack }: { onBack: () => void }) {
                 </div>
                 <span className="text-sm text-gray-700">{opt}</span>
               </div>
-            )) : <textarea rows={q.type==='short_answer'?3:2} placeholder={q.type==='fill_in'?'答えを入力...':'回答を記述...'} className="w-full border-2 border-gray-200 rounded-xl p-2.5 text-sm outline-none focus:border-blue-400 resize-y transition-colors" onChange={e=>setTA(q.id,e.target.value)}/>}
+            )) : <CustomKeyboard qid={q.id} value={ans[q.id]||''} onChange={(v)=>setTA(q.id,v)}/>}
           </div>
         ))}
         <C>
