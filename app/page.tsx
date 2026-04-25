@@ -197,6 +197,8 @@ function TeacherMode({ onBack }: { onBack: () => void }) {
     const res = await fetch('/api/quiz', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({code:c, title:quiz?.title, questions:quiz?.questions}) })
     const data = await res.json()
     if (data.error) { setErr(data.error); return }
+    // 問題バンクに自動保存
+    await fetch('/api/bank', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title:quiz?.title, subject:'英語', unit:'', questions:quiz?.questions}) })
     setCode(c); setStep('shared')
   }
 
@@ -664,6 +666,112 @@ function HandwrittenTeacherView({ onBack }: { onBack: () => void }) {
     </div>
   )
 }
+// ── Question Bank Mode ────────────────────────────
+function QuestionBankMode({ onBack }: { onBack: () => void }) {
+  const [auth, setAuth] = useState(false)
+  const [pw, setPw] = useState('')
+  const [pwErr, setPwErr] = useState(false)
+  const [search, setSearch] = useState('')
+  const [unit, setUnit] = useState('')
+  const [banks, setBanks] = useState<Array<{id:string;title:string;subject:string;unit:string;questions:unknown[];created_at:string}>>([])
+  const [loading, setLoading] = useState(false)
+  const [distributing, setDistributing] = useState<string|null>(null)
+  const [doneCode, setDoneCode] = useState<{code:string;title:string}|null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const fetchBanks = async () => {
+    setLoading(true)
+    const params = new URLSearchParams()
+    if (search) params.set('title', search)
+    if (unit) params.set('unit', unit)
+    const res = await fetch(`/api/bank?${params}`)
+    const data = await res.json()
+    setBanks(Array.isArray(data)?data:[])
+    setLoading(false)
+  }
+
+  useEffect(()=>{ if(auth) fetchBanks() }, [auth])
+
+  const distribute = async (bank: {id:string;title:string;questions:unknown[]}) => {
+    setDistributing(bank.id)
+    const c = Math.random().toString(36).slice(2,8).toUpperCase()
+    const res = await fetch('/api/quiz', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({code:c, title:bank.title, questions:bank.questions}) })
+    const data = await res.json()
+    if (!data.error) setDoneCode({code:c, title:bank.title})
+    setDistributing(null)
+  }
+
+  if (!auth) return (
+    <div className="bg-white rounded-2xl p-6 shadow-2xl">
+      <div className="text-center mb-4"><div className="text-4xl mb-2">🏦</div><h2 className="font-black text-slate-800 text-lg">問題バンク</h2><p className="text-gray-400 text-sm mt-1">パスワードを入力してください</p></div>
+      <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){if(pw==='naisyo'){setAuth(true);setPwErr(false)}else setPwErr(true)}}} placeholder="パスワード" className="w-full border-2 border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500 mb-2"/>
+      {pwErr && <p className="text-red-500 text-xs mb-2">パスワードが違います</p>}
+      <button onClick={()=>{if(pw==='naisyo'){setAuth(true);setPwErr(false)}else setPwErr(true)}} className="w-full bg-blue-800 text-white font-bold py-3 rounded-xl text-sm hover:bg-blue-700">入室する</button>
+      <div className="h-2"/>
+      <button onClick={onBack} className="w-full bg-transparent border-2 border-gray-200 text-gray-500 font-bold py-3 rounded-xl text-sm hover:bg-gray-50">← 戻る</button>
+    </div>
+  )
+
+  if (doneCode) return (
+    <div className="bg-white rounded-2xl p-6 shadow-2xl">
+      <div className="text-center mb-4"><div className="text-5xl mb-2">🎉</div><h2 className="font-black text-slate-800 text-lg">配布コードが発行されました！</h2></div>
+      <div className="bg-gradient-to-br from-blue-800 to-blue-900 rounded-2xl p-6 text-center mb-4">
+        <p className="text-blue-200 text-xs font-bold mb-2">配布コード</p>
+        <div className="text-white font-black tracking-widest mb-3" style={{fontSize:'44px',letterSpacing:'0.15em'}}>{doneCode.code}</div>
+        <button onClick={()=>{navigator.clipboard?.writeText(doneCode.code);setCopied(true);setTimeout(()=>setCopied(false),2000)}} className={`text-sm font-bold px-5 py-2 rounded-xl transition-all ${copied?'bg-green-400 text-white':'bg-white text-blue-800'}`}>
+          {copied?'✓ コピーしました！':'📋 コピー'}
+        </button>
+      </div>
+      <p className="text-gray-500 text-sm text-center mb-4">{doneCode.title}</p>
+      <Btn onClick={()=>setDoneCode(null)} color="ghost">← 問題バンクに戻る</Btn>
+      <div className="h-2"/>
+      <Btn onClick={onBack} color="ghost">🏠 ホームに戻る</Btn>
+    </div>
+  )
+
+  return (
+    <div>
+      <div className="bg-white rounded-2xl p-4 shadow-2xl mb-4">
+        <h2 className="font-black text-slate-800 text-base mb-3">🏦 問題バンク</h2>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="タイトルで検索..." className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500 mb-2"/>
+        <input value={unit} onChange={e=>setUnit(e.target.value)} placeholder="単元で絞り込み..." className="w-full border-2 border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-500 mb-2"/>
+        <div className="flex gap-2">
+          <button onClick={fetchBanks} className="flex-1 bg-blue-800 text-white font-bold py-2 rounded-xl text-sm hover:bg-blue-700">🔍 検索</button>
+          <button onClick={()=>{setSearch('');setUnit('');fetchBanks()}} className="bg-gray-100 text-gray-600 font-bold py-2 px-4 rounded-xl text-sm hover:bg-gray-200">クリア</button>
+        </div>
+      </div>
+
+      {loading && <div className="bg-white rounded-2xl p-6 shadow-2xl text-center"><span style={{display:'inline-block',animation:'spin 1s linear infinite'}}>⏳</span></div>}
+
+      {!loading && banks.length===0 && <div className="bg-white rounded-2xl p-6 shadow-2xl text-center"><div className="text-4xl mb-2">📭</div><p className="text-gray-500 text-sm font-bold">問題が見つかりません</p><p className="text-gray-400 text-xs mt-1">先生モードで問題を作成すると自動保存されます</p></div>}
+
+      {banks.map(b=>(
+        <div key={b.id} className="bg-white rounded-2xl p-4 shadow-xl mb-3">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <p className="font-bold text-slate-800 text-sm">{b.title}</p>
+              <div className="flex gap-1 mt-1">
+                <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-bold">{b.subject}</span>
+                {b.unit && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold">{b.unit}</span>}
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold">{(b.questions as unknown[]).length}問</span>
+              </div>
+              <p className="text-gray-400 text-xs mt-1">{new Date(b.created_at).toLocaleDateString('ja-JP')}</p>
+            </div>
+          </div>
+          <button
+            onClick={()=>distribute(b)}
+            disabled={distributing===b.id}
+            className={`w-full py-2 text-sm font-bold rounded-xl transition-all ${distributing===b.id?'bg-gray-200 text-gray-500':'bg-orange-500 hover:bg-orange-400 text-white'}`}>
+            {distributing===b.id?'発行中...':'📤 この問題を配布する'}
+          </button>
+        </div>
+      ))}
+      <div className="bg-white rounded-2xl p-4 shadow-2xl">
+        <Btn onClick={onBack} color="ghost">← 戻る</Btn>
+      </div>
+    </div>
+  )
+}
 // ── Main App ─────────────────────────────────────
 export default function Home() {
   const [mode, setMode] = useState('home')
@@ -732,6 +840,22 @@ export default function Home() {
                 </div>
               </div>
             </button>
+            <button onClick={()=>setMode('bank')} className="w-full text-left mb-3">
+              <div className="bg-white rounded-2xl p-5 shadow-2xl hover:shadow-3xl transition-all hover:-translate-y-0.5">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-yellow-500 flex items-center justify-center text-2xl shrink-0">🏦</div>
+                  <div>
+                    <p className="font-black text-slate-800 text-base">問題バンク</p>
+                    <p className="text-gray-500 text-xs mt-0.5">過去問を検索して再配布</p>
+                    <div className="flex gap-1 mt-2 flex-wrap">
+                      {['🔍 タイトル検索','📚 単元絞り込み','📤 即再配布'].map(t=>(
+                        <span key={t} className="text-xs bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded-full font-bold">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </button>
             <button onClick={()=>setMode('handwritten-teacher')} className="w-full text-left">
               <div className="bg-white rounded-2xl p-5 shadow-2xl hover:shadow-3xl transition-all hover:-translate-y-0.5">
                 <div className="flex items-center gap-4">
@@ -754,6 +878,7 @@ export default function Home() {
         {mode==='student' && <StudentMode onBack={()=>setMode('home')}/>}
         {mode==='handwritten' && <HandwrittenMode onBack={()=>setMode('home')}/>}
         {mode==='handwritten-teacher' && <HandwrittenTeacherView onBack={()=>setMode('home')}/>}
+        {mode==='bank' && <QuestionBankMode onBack={()=>setMode('home')}/>}
       </div>
     </div>
   )
