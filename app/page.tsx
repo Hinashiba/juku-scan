@@ -150,9 +150,9 @@ function TeacherMode({ onBack }: { onBack: () => void }) {
   if (!auth) return (
     <div className="bg-white rounded-2xl p-6 shadow-2xl">
       <div className="text-center mb-4"><div className="text-4xl mb-2">🔒</div><h2 className="font-black text-slate-800 text-lg">先生モード</h2><p className="text-gray-400 text-sm mt-1">パスワードを入力してください</p></div>
-      <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){if(pw===process.env.next_public_teacher_password){setAuth(true);setPwErr(false)}else setPwErr(true)}}} placeholder="パスワード" className="w-full border-2 border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500 mb-2"/>
+      <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){if(pw==='naisyo'){setAuth(true);setPwErr(false)}else setPwErr(true)}}} placeholder="パスワード" className="w-full border-2 border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500 mb-2"/>
       {pwErr && <p className="text-red-500 text-xs mb-2">パスワードが違います</p>}
-      <button onClick={()=>{if(pw===process.env.next_public_teacher_password){setAuth(true);setPwErr(false)}else setPwErr(true)}} className="w-full bg-blue-800 text-white font-bold py-3 rounded-xl text-sm hover:bg-blue-700">入室する</button>
+      <button onClick={()=>{if(pw==='naisyo'){setAuth(true);setPwErr(false)}else setPwErr(true)}} className="w-full bg-blue-800 text-white font-bold py-3 rounded-xl text-sm hover:bg-blue-700">入室する</button>
       <div className="h-2"/>
       <button onClick={onBack} className="w-full bg-transparent border-2 border-gray-200 text-gray-500 font-bold py-3 rounded-xl text-sm hover:bg-gray-50">← 戻る</button>
     </div>
@@ -600,9 +600,9 @@ function HandwrittenTeacherView({ onBack }: { onBack: () => void }) {
   if (!auth) return (
     <div className="bg-white rounded-2xl p-6 shadow-2xl">
       <div className="text-center mb-4"><div className="text-4xl mb-2">🔒</div><h2 className="font-black text-slate-800 text-lg">手書き提出確認</h2><p className="text-gray-400 text-sm mt-1">パスワードを入力してください</p></div>
-      <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){if(pw===process.env.next_public_teacher_password){setAuth(true);setPwErr(false)}else setPwErr(true)}}} placeholder="パスワード" className="w-full border-2 border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500 mb-2"/>
+      <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){if(pw==='naisyo'){setAuth(true);setPwErr(false)}else setPwErr(true)}}} placeholder="パスワード" className="w-full border-2 border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500 mb-2"/>
       {pwErr && <p className="text-red-500 text-xs mb-2">パスワードが違います</p>}
-      <button onClick={()=>{if(pw===process.env.next_public_teacher_password){setAuth(true);setPwErr(false)}else setPwErr(true)}} className="w-full bg-blue-800 text-white font-bold py-3 rounded-xl text-sm hover:bg-blue-700">入室する</button>
+      <button onClick={()=>{if(pw==='naisyo'){setAuth(true);setPwErr(false)}else setPwErr(true)}} className="w-full bg-blue-800 text-white font-bold py-3 rounded-xl text-sm hover:bg-blue-700">入室する</button>
       <div className="h-2"/>
       <button onClick={onBack} className="w-full bg-transparent border-2 border-gray-200 text-gray-500 font-bold py-3 rounded-xl text-sm hover:bg-gray-50">← 戻る</button>
     </div>
@@ -706,9 +706,9 @@ function QuestionBankMode({ onBack }: { onBack: () => void }) {
   if (!auth) return (
     <div className="bg-white rounded-2xl p-6 shadow-2xl">
       <div className="text-center mb-4"><div className="text-4xl mb-2">🏦</div><h2 className="font-black text-slate-800 text-lg">問題バンク</h2><p className="text-gray-400 text-sm mt-1">パスワードを入力してください</p></div>
-      <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){if(pw===process.env.next_public_teacher_password){setAuth(true);setPwErr(false)}else setPwErr(true)}}} placeholder="パスワード" className="w-full border-2 border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500 mb-2"/>
+      <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){if(pw==='naisyo'){setAuth(true);setPwErr(false)}else setPwErr(true)}}} placeholder="パスワード" className="w-full border-2 border-gray-200 rounded-xl p-3 text-sm outline-none focus:border-blue-500 mb-2"/>
       {pwErr && <p className="text-red-500 text-xs mb-2">パスワードが違います</p>}
-      <button onClick={()=>{if(pw===process.env.next_public_teacher_password){setAuth(true);setPwErr(false)}else setPwErr(true)}} className="w-full bg-blue-800 text-white font-bold py-3 rounded-xl text-sm hover:bg-blue-700">入室する</button>
+      <button onClick={()=>{if(pw==='naisyo'){setAuth(true);setPwErr(false)}else setPwErr(true)}} className="w-full bg-blue-800 text-white font-bold py-3 rounded-xl text-sm hover:bg-blue-700">入室する</button>
       <div className="h-2"/>
       <button onClick={onBack} className="w-full bg-transparent border-2 border-gray-200 text-gray-500 font-bold py-3 rounded-xl text-sm hover:bg-gray-50">← 戻る</button>
     </div>
