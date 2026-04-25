@@ -20,13 +20,20 @@ export async function POST(req: NextRequest) {
       messages: [{ role: "user", content: `採点してJSONのみ出力:
 問題: ${JSON.stringify(questions.map((q: {id:number,question:string,answer:string,type:string}) => ({id:q.id,q:q.question,a:q.answer,type:q.type})))}
 回答: ${JSON.stringify(answers)}
-{"score":N,"total":N,"results":[{"id":1,"correct":true,"feedback":"フィードバック","correct_answer":"正解","student_answer":"生徒の回答"}]}
-記述・穴埋めは意味が合えば正解。student_answerには生徒が実際に入力した回答をそのまま入れる。` }]
+{"score":N,"total":N,"results":[{"id":1,"correct":true,"feedback":"フィードバック","correct_answer":"正解"}]}
+記述・穴埋めは意味が合えば正解。` }]
     })
   })
   const data = await res.json()
   if (data.error) return NextResponse.json({ error: data.error.message }, { status: 400 })
   const result = extractJson(data.content.map((i: {text?: string}) => i.text||"").join(""))
   if (!result) return NextResponse.json({ error: "採点失敗" }, { status: 400 })
+
+  // student_answerをanswersから直接セット
+  result.results = result.results.map((r: {id:number;correct:boolean;feedback:string;correct_answer:string}) => ({
+    ...r,
+    student_answer: answers[r.id] || '（未回答）'
+  }))
+
   return NextResponse.json(result)
 }
