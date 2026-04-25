@@ -516,7 +516,7 @@ function HandwrittenMode({ onBack }: { onBack: () => void }) {
             onDrop={e=>{e.preventDefault();loadFile(e.dataTransfer.files[0])}}>
             {imgPrev ? <img src={imgPrev} alt="" className="max-h-48 mx-auto rounded-xl object-contain"/> : <><div className="text-3xl mb-2">📷</div><p className="font-bold text-sm text-gray-600">写真をタップ or ドロップ</p><p className="text-xs text-gray-400 mt-1">明るい場所・ペンで書いた答案推奨</p></>}
           </div>
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e=>loadFile(e.target.files?.[0]??null)}/>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e=>loadFile(e.target.files?.[0]??null)}/>
         </div>
         {err && <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl"><p className="text-red-600 text-xs font-bold">❌ {err}</p></div>}
         <Btn onClick={submit} disabled={!name.trim()||!title.trim()||!imgB64} color="orange">📤 提出して採点する</Btn>
