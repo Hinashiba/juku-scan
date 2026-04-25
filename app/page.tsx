@@ -382,6 +382,7 @@ function StudentMode({ onBack }: { onBack: () => void }) {
       const r = await res.json()
       if (r.error) throw new Error(r.error)
       await fetch('/api/submit', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({quizCode:code, studentName:name, score:r.score, total:r.total, answers:ans, results:r.results}) })
+      await fetch('/api/notify', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({studentName:name, className:'', type:'digital', title:quiz?.title||'問題'}) })
       setResult(r); setStep('result')
     } catch(e: unknown) { setErr(e instanceof Error ? e.message : String(e)); setStep('answering') }
   }
@@ -493,6 +494,7 @@ function HandwrittenMode({ onBack }: { onBack: () => void }) {
     setStep('loading'); setErr('')
     try {
       const res = await fetch('/api/handwritten', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ studentName:name, className:cls, imageBase64:imgB64, homeworkTitle:title }) })
+      await fetch('/api/notify', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({studentName:name, className:cls, type:'handwritten', title}) })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       setResult(data); setStep('result')
